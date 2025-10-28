@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дискоед</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas" width="1280" height="720"></canvas>
+        
+        <div id="start-screen">
+            <div id="start-message">КЛИКНИТЕ ЧТОБЫ НАЧАТЬ</div>
+        </div>
+        
+        <div id="ui-overlay">
+            <button id="settings-btn" title="Настройки управления">⚙</button>
+            <div id="gamepad-indicator" title="Геймпад подключен">🎮</div>
+        </div>
+        
+        <div id="settings-modal">
+            <h2>НАСТРОЙКИ УПРАВЛЕНИЯ</h2>
+            
+            <div class="control-setting">
+                <label>ДВИЖЕНИЕ ВЛЕВО:</label>
+                <div class="key-input" data-action="left">ArrowLeft</div>
+            </div>
+            
+            <div class="control-setting">
+                <label>ДВИЖЕНИЕ ВПРАВО:</label>
+                <div class="key-input" data-action="right">ArrowRight</div>
+            </div>
+            
+            <div class="control-setting">
+                <label>БЕГ:</label>
+                <div class="key-input" data-action="run">Shift</div>
+            </div>
+            
+            <div class="control-setting">
+                <label>ПРЫЖОК:</label>
+                <div class="key-input" data-action="jump">Space</div>
+            </div>
+            
+            <div class="control-setting">
+                <label>ГЕЙМПАД:</label>
+                <div id="gamepad-status">Не подключен</div>
+            </div>
+            
+            <div id="modal-actions">
+                <button class="modal-btn" id="reset-settings">СБРОС</button>
+                <button class="modal-btn" id="save-settings">СОХРАНИТЬ</button>
+            </div>
+        </div>
+        
+        <div id="loading">
+            <div>ЗАГРУЗКА РЕСУРСОВ...</div>
+            <div class="progress-bar">
+                <div class="progress" id="progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/audio.js"></script>
+    <script src="js/gamepad.js"></script>
+    <script src="js/controls.js"></script>
+    <script src="js/effects.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
