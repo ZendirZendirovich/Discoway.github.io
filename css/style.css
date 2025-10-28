@@ -1,0 +1,299 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    color: white;
+    overflow: hidden;
+}
+
+#game-container {
+    position: relative;
+    width: 1280px;
+    max-width: 95vw;
+    height: 720px;
+    max-height: 80vh;
+    border: 4px solid #2c3e50;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    background: linear-gradient(to bottom, #87CEEB, #1E90FF);
+    image-rendering: pixelated;
+    aspect-ratio: 16/9;
+}
+
+#game-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+}
+
+#start-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    display: none; /* Сначала скрыт */
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    cursor: pointer;
+}
+
+#start-message {
+    font-size: 48px;
+    font-weight: bold;
+    color: #fff;
+    text-align: center;
+    pointer-events: none;
+}
+
+#ui-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+#settings-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s;
+    pointer-events: auto;
+}
+
+#settings-btn:hover {
+    background: rgba(0, 0, 0, 0.9);
+    transform: rotate(30deg);
+}
+
+#gamepad-indicator {
+    position: absolute;
+    top: 15px;
+    right: 80px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+#gamepad-indicator.connected {
+    opacity: 1;
+    background: rgba(46, 204, 113, 0.7);
+}
+
+#settings-modal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(30, 30, 40, 0.95);
+    border-radius: 15px;
+    padding: 30px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    z-index: 30;
+    display: none;
+    pointer-events: auto;
+}
+
+#settings-modal h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #3498db;
+    font-size: 28px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.control-setting {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    transition: background 0.3s;
+}
+
+.control-setting:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.control-setting label {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.key-input {
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: 2px solid #3498db;
+    border-radius: 6px;
+    padding: 8px 15px;
+    font-size: 16px;
+    width: 120px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.key-input:focus {
+    outline: none;
+    border-color: #2ecc71;
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+}
+
+.key-input.listening {
+    background: rgba(46, 204, 113, 0.3);
+    border-color: #2ecc71;
+}
+
+#gamepad-status {
+    background: rgba(0, 0, 0, 0.5);
+    color: #e74c3c;
+    border: 2px solid #e74c3c;
+    border-radius: 6px;
+    padding: 8px 15px;
+    font-size: 16px;
+    width: 120px;
+    text-align: center;
+}
+
+#gamepad-status.connected {
+    color: #2ecc71;
+    border-color: #2ecc71;
+}
+
+#modal-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+}
+
+.modal-btn {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+#save-settings {
+    background: #2ecc71;
+    color: white;
+}
+
+#save-settings:hover {
+    background: #27ae60;
+    transform: translateY(-2px);
+}
+
+#reset-settings {
+    background: #e74c3c;
+    color: white;
+}
+
+#reset-settings:hover {
+    background: #c0392b;
+    transform: translateY(-2px);
+}
+
+#loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #333;
+    font-size: 24px;
+    background: #fff;
+    padding: 25px 40px;
+    border-radius: 15px;
+    text-align: center;
+    z-index: 25;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.progress-bar {
+    width: 300px;
+    height: 20px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    margin-top: 15px;
+    overflow: hidden;
+    border: 1px solid #ddd;
+}
+
+.progress {
+    height: 100%;
+    background: linear-gradient(90deg, #3498db, #2ecc71);
+    border-radius: 10px;
+    width: 0%;
+    transition: width 0.3s;
+}
+
+@media (max-width: 600px) {
+    .control-setting {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .key-input {
+        width: 100%;
+    }
+    
+    #game-container {
+        max-width: 100vw;
+        max-height: 56.25vw;
+    }
+    
+    #start-message {
+        font-size: 32px;
+    }
+    
+    #loading {
+        font-size: 18px;
+        padding: 20px 30px;
+    }
+    
+    .progress-bar {
+        width: 250px;
+    }
+}
