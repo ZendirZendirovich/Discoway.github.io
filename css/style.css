@@ -356,40 +356,29 @@ body {
     pointer-events: auto;
 }
 
-/* Джойстик */
-#joystick-container {
-    position: relative;
-    width: 120px;
-    height: 120px;
-    touch-action: none;
-}
-
-#joystick-base {
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    border: 3px solid rgba(255, 255, 255, 0.5);
+/* Кнопки стрелок */
+.mobile-btn.arrow-btn {
+    width: 70px;
+    height: 70px;
+    border: none;
     border-radius: 50%;
-    position: relative;
-    touch-action: none;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-size: 32px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+    touch-action: manipulation;
+    transition: all 0.2s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-#joystick-handle {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 60px;
-    height: 60px;
-    background: rgba(255, 255, 255, 0.8);
-    border-radius: 50%;
-    transition: all 0.1s;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-    touch-action: none;
-}
-
-#joystick-handle.active {
-    background: rgba(52, 152, 219, 0.9);
+.mobile-btn.arrow-btn:active {
+    background: rgba(52, 152, 219, 0.8);
+    transform: scale(0.95);
 }
 
 .mobile-btn.action-btn {
@@ -416,11 +405,11 @@ body {
 }
 
 #mobile-run {
-    background: rgba(0, 0, 0, 0.7) !important;
+    background: rgba(0, 0, 0, 0.7);
 }
 
 #mobile-jump {
-    background: rgba(0, 0, 0, 0.7) !important;
+    background: rgba(0, 0, 0, 0.7);
 }
 
 #mobile-settings {
@@ -442,10 +431,10 @@ body {
     }
     
     #game-container {
-        width: 100vw;
-        height: calc(100vw * 9 / 16);
-        max-width: 100%;
-        max-height: 80vh;
+        width: 100%;
+        max-width: 1280px;
+        height: auto;
+        aspect-ratio: 16/9;
         border: 2px solid #2c3e50;
         border-radius: 8px;
         margin: auto;
@@ -482,20 +471,15 @@ body {
         width: 250px;
     }
     
-    /* Адаптация джойстика для маленьких экранов */
-    #joystick-container {
-        width: 100px;
-        height: 100px;
-    }
-    
-    #joystick-handle {
-        width: 50px;
-        height: 50px;
-    }
-    
+    /* Адаптация кнопок для маленьких экранов */
+    .mobile-btn.arrow-btn,
     .mobile-btn.action-btn {
         width: 60px;
         height: 60px;
+        font-size: 28px;
+    }
+    
+    .mobile-btn.action-btn {
         font-size: 24px;
     }
     
@@ -543,20 +527,15 @@ body {
     }
     
     /* Еще меньше кнопки для очень маленьких экранов */
-    #joystick-container {
-        width: 90px;
-        height: 90px;
-    }
-    
-    #joystick-handle {
-        width: 45px;
-        height: 45px;
-    }
-    
+    .mobile-btn.arrow-btn,
     .mobile-btn.action-btn {
         width: 55px;
         height: 55px;
-        font-size: 22px;
+        font-size: 24px;
+    }
+    
+    .mobile-btn.action-btn {
+        font-size: 20px;
     }
     
     #mobile-settings {
