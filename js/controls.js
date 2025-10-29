@@ -44,35 +44,36 @@ class Controls {
         
         if (!joystickContainer || !joystickHandle) return;
         
-        const baseRect = joystickBase.getBoundingClientRect();
-        const baseCenterX = baseRect.left + baseRect.width / 2;
-        const baseCenterY = baseRect.top + baseRect.height / 2;
+        let baseRect = joystickBase.getBoundingClientRect();
+        let baseCenterX = baseRect.left + baseRect.width / 2;
+        let baseCenterY = baseRect.top + baseRect.height / 2;
         const maxDistance = baseRect.width / 3;
         
+        const updateBasePosition = () => {
+            baseRect = joystickBase.getBoundingClientRect();
+            baseCenterX = baseRect.left + baseRect.width / 2;
+            baseCenterY = baseRect.top + baseRect.height / 2;
+        };
+        
         const updateJoystick = (clientX, clientY) => {
+            updateBasePosition();
             const deltaX = clientX - baseCenterX;
-            const distance = Math.sqrt(deltaX * deltaX);
+            const distance = Math.abs(deltaX);
             
             if (distance > maxDistance) {
-                const angle = Math.atan2(deltaX, 1);
-                const limitedX = Math.cos(angle) * maxDistance;
+                const direction = deltaX > 0 ? 1 : -1;
+                const limitedX = maxDistance * direction;
                 joystickHandle.style.transform = `translate(calc(-50% + ${limitedX}px), -50%)`;
                 
                 // Определяем направление
-                if (limitedX < -10) {
-                    this.joystickDirection = -1;
-                } else if (limitedX > 10) {
-                    this.joystickDirection = 1;
-                } else {
-                    this.joystickDirection = 0;
-                }
+                this.joystickDirection = direction;
             } else {
                 joystickHandle.style.transform = `translate(calc(-50% + ${deltaX}px), -50%)`;
                 
-                // Определяем направление
-                if (deltaX < -10) {
+                // Определяем направление с небольшим dead zone
+                if (deltaX < -15) {
                     this.joystickDirection = -1;
-                } else if (deltaX > 10) {
+                } else if (deltaX > 15) {
                     this.joystickDirection = 1;
                 } else {
                     this.joystickDirection = 0;
@@ -131,6 +132,11 @@ class Controls {
                 resetJoystick();
             }
         });
+
+        // Обновляем позицию при ресайзе
+        window.addEventListener('resize', () => {
+            updateBasePosition();
+        });
     }
     
     setupMobileControls() {
@@ -140,6 +146,10 @@ class Controls {
         const settingsBtn = document.getElementById('mobile-settings');
         const closeMobileSettings = document.getElementById('close-mobile-settings');
         const mobileSettingsModal = document.getElementById('mobile-settings-modal');
+        
+        // Обновляем смайлы кнопок
+        if (runBtn) runBtn.innerHTML = '🏃‍♂️';
+        if (jumpBtn) jumpBtn.innerHTML = '⬆️';
         
         // Кнопка бега
         if (runBtn) {

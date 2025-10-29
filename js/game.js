@@ -22,6 +22,7 @@ class Game {
         this.gameStarted = false;
         this.gameActive = false;
         this.isMobile = this.checkIfMobile();
+        this.imagesLoaded = false;
         
         // Центрируем игровой контейнер
         this.centerGameContainer();
@@ -32,7 +33,10 @@ class Game {
         // Показываем соответствующий экран в зависимости от устройства и ориентации
         this.showAppropriateScreen();
         
-        this.loadImages();
+        // Загружаем изображения только если в ландшафтной ориентации
+        if (!this.isMobile || this.isLandscape()) {
+            this.loadImages();
+        }
         
         // Обработчик изменения размера окна
         window.addEventListener('resize', () => {
@@ -53,6 +57,10 @@ class Game {
                (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
     }
     
+    isLandscape() {
+        return window.innerWidth > window.innerHeight;
+    }
+    
     setupOrientationHandler() {
         // Также проверяем resize для детекции ориентации
         window.addEventListener('resize', () => {
@@ -62,15 +70,12 @@ class Game {
     
     handleOrientationChange() {
         if (this.isMobile) {
-            const isLandscape = window.innerWidth > window.innerHeight;
+            const isLandscape = this.isLandscape();
             
             if (isLandscape) {
                 // Ландшафтная ориентация - скрываем экран поворота
                 if (this.rotateScreen) {
                     this.rotateScreen.style.display = 'none';
-                }
-                if (this.loading) {
-                    this.loading.style.display = 'block';
                 }
                 // Показываем игровой контейнер
                 const gameContainer = document.getElementById('game-container');
@@ -79,6 +84,12 @@ class Game {
                 }
                 // Меняем фон body
                 document.body.style.background = 'linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d)';
+                
+                // Загружаем изображения если еще не загружены
+                if (!this.imagesLoaded) {
+                    this.loading.style.display = 'block';
+                    this.loadImages();
+                }
             } else {
                 // Портретная ориентация - показываем экран поворота
                 if (this.rotateScreen) {
@@ -100,7 +111,7 @@ class Game {
     
     showAppropriateScreen() {
         if (this.isMobile) {
-            const isLandscape = window.innerWidth > window.innerHeight;
+            const isLandscape = this.isLandscape();
             
             if (isLandscape) {
                 // Ландшафтная ориентация - показываем загрузку
@@ -125,6 +136,12 @@ class Game {
         const gameContainer = document.getElementById('game-container');
         if (gameContainer) {
             gameContainer.style.margin = 'auto';
+            // Принудительное центрирование
+            gameContainer.style.position = 'relative';
+            gameContainer.style.left = 'auto';
+            gameContainer.style.right = 'auto';
+            gameContainer.style.top = 'auto';
+            gameContainer.style.bottom = 'auto';
         }
     }
     
@@ -201,58 +218,79 @@ class Game {
         let loaded = 0;
         const total = Object.keys(imageSources).length;
         
-        // Проверяем ориентацию перед началом загрузки
-        if (this.isMobile) {
-            const isLandscape = window.innerWidth > window.innerHeight;
-            if (!isLandscape) {
-                console.log("Ожидаем ландшафтную ориентацию для загрузки ресурсов");
-                return; // Не загружаем ресурсы пока телефон не перевернут
-            }
-        }
+        console.log("Начинаем загрузку ресурсов...");
         
         for (const [key, src] of Object.entries(imageSources)) {
             this.images[key] = new Image();
             this.images[key].onload = () => {
                 loaded++;
                 const progress = (loaded / total) * 100;
-                this.progressBar.style.width = `${progress}%`;
-                this.loading.querySelector('div').textContent = `ЗАГРУЗКА РЕСУРСОВ... ${Math.round(progress)}%`;
+                if (this.progressBar) {
+                    this.progressBar.style.width = `${progress}%`;
+                }
+                if (this.loading) {
+                    const loadingText = this.loading.querySelector('div');
+                    if (loadingText) {
+                        loadingText.textContent = `ЗАГРУЗКА РЕСУРСОВ... ${Math.round(progress)}%`;
+                    }
+                }
+                console.log(`Загружено: ${key} (${loaded}/${total})`);
                 
                 if (loaded === total) {
+                    this.imagesLoaded = true;
+                    console.log("Все ресурсы загружены!");
                     setTimeout(() => {
                         // Скрываем белый экран загрузки
-                        this.loading.style.display = 'none';
+                        if (this.loading) {
+                            this.loading.style.display = 'none';
+                        }
                         // Показываем черный стартовый экран
-                        this.startScreen.style.display = 'flex';
+                        if (this.startScreen) {
+                            this.startScreen.style.display = 'flex';
+                        }
                         this.gameStarted = true;
                         this.setupStartScreen();
                         this.gameLoop();
-                        console.log("Все ресурсы загружены, ожидаем клика для начала игры");
+                        console.log("Ожидаем клика для начала игры");
                     }, 500);
                 }
             };
-            this.images[key].src = src;
             
             this.images[key].onerror = () => {
+                console.log(`Ошибка загрузки: ${src}, создаем замену`);
                 this.createPixelSprite(key);
                 loaded++;
                 const progress = (loaded / total) * 100;
-                this.progressBar.style.width = `${progress}%`;
-                this.loading.querySelector('div').textContent = `ЗАГРУЗКА РЕСУРСОВ... ${Math.round(progress)}%`;
+                if (this.progressBar) {
+                    this.progressBar.style.width = `${progress}%`;
+                }
+                if (this.loading) {
+                    const loadingText = this.loading.querySelector('div');
+                    if (loadingText) {
+                        loadingText.textContent = `ЗАГРУЗКА РЕСУРСОВ... ${Math.round(progress)}%`;
+                    }
+                }
                 
                 if (loaded === total) {
+                    this.imagesLoaded = true;
                     setTimeout(() => {
                         // Скрываем белый экран загрузки
-                        this.loading.style.display = 'none';
+                        if (this.loading) {
+                            this.loading.style.display = 'none';
+                        }
                         // Показываем черный стартовый экран
-                        this.startScreen.style.display = 'flex';
+                        if (this.startScreen) {
+                            this.startScreen.style.display = 'flex';
+                        }
                         this.gameStarted = true;
                         this.setupStartScreen();
                         this.gameLoop();
-                        console.log("Все ресурсы загружены (с запасными спрайтами), ожидаем клика для начала игры");
+                        console.log("Все ресурсы загружены (с запасными спрайтами)");
                     }, 500);
                 }
             };
+            
+            this.images[key].src = src;
         }
     }
     
