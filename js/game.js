@@ -9,6 +9,7 @@ class Game {
         this.rotateScreen = document.getElementById('rotate-screen');
         
         this.images = {};
+        // Исправленные платформы - убираем пересечения
         this.platforms = [
             { x: 0, y: 656, width: 1280, height: 64, type: 'ground' },
             { x: 300, y: 500, width: 200, height: 20, type: 'platform' },
@@ -23,6 +24,14 @@ class Game {
         this.gameActive = false;
         this.isMobile = this.checkIfMobile();
         this.imagesLoaded = false;
+
+        // Настройки освещения - ОЧЕНЬ большое солнце у самого края
+        this.light = {
+            x: 1180,  // Еще правее, прямо у края
+            y: 50,    // Очень высоко
+            radius: 400, // ОЧЕНЬ БОЛЬШОЙ радиус
+            intensity: 0.9
+        };
         
         // Центрируем игровой контейнер
         this.centerGameContainer();
@@ -54,7 +63,8 @@ class Game {
     
     checkIfMobile() {
         return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-               (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
+               (navigator.maxTouchPoints && navigator.maxTouchPoints > 2) ||
+               window.innerWidth <= 1024;
     }
     
     isLandscape() {
@@ -153,8 +163,8 @@ class Game {
     
     checkMobileDevice() {
         if (this.isMobile) {
-            console.log("Мобильное устройство обнаружено");
-            // Скрываем обычную кнопку настроек на мобильных
+            console.log("Мобильное устройство или планшет обнаружено");
+            // Скрываем обычную кнопку настроек на мобильных и планшетах
             const settingsBtn = document.getElementById('settings-btn');
             if (settingsBtn) {
                 settingsBtn.style.display = 'none';
@@ -374,6 +384,130 @@ class Game {
         this.images[key] = tempCanvas;
     }
     
+    drawSun() {
+        // Рисуем ОЧЕНЬ большое солнце у самого края
+        const gradient = this.ctx.createRadialGradient(
+            this.light.x, this.light.y, 0,
+            this.light.x, this.light.y, this.light.radius
+        );
+        
+        // Мягкие цвета с плавными переходами
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+        gradient.addColorStop(0.05, 'rgba(255, 255, 220, 0.95)');
+        gradient.addColorStop(0.1, 'rgba(255, 255, 200, 0.9)');
+        gradient.addColorStop(0.2, 'rgba(255, 255, 180, 0.8)');
+        gradient.addColorStop(0.4, 'rgba(255, 255, 150, 0.6)');
+        gradient.addColorStop(0.7, 'rgba(255, 255, 120, 0.3)');
+        gradient.addColorStop(1, 'rgba(255, 255, 100, 0)');
+        
+        this.ctx.save();
+        this.ctx.globalCompositeOperation = 'lighter';
+        this.ctx.fillStyle = gradient;
+        this.ctx.beginPath();
+        this.ctx.arc(this.light.x, this.light.y, this.light.radius, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.restore();
+    }
+    
+    drawShadows() {
+        // Рисуем только ОДНУ тень от игрока - на ближайшей платформе под ним
+        this.ctx.save();
+        this.ctx.globalCompositeOperation = 'multiply';
+        
+        let closestPlatform = null;
+        let minDistance = Infinity;
+        
+        // Ищем ближайшую платформу под игроком
+        for (const platform of this.platforms) {
+            // Проверяем, находится ли игрок над этой платформой
+            const isAbovePlatform = player.x + player.width > platform.x && 
+                                  player.x < platform.x + platform.width &&
+                                  player.y + player.height <= platform.y;
+            
+            if (isAbovePlatform) {
+                const distanceToPlatform = platform.y - (player.y + player.height);
+                // Ищем платформу с наименьшим расстоянием (самую близкую)
+                if (distanceToPlatform < minDistance) {
+                    minDistance = distanceToPlatform;
+                    closestPlatform = platform;
+                }
+            }
+        }
+        
+        // Если нашли платформу под игроком - рисуем тень на ней
+        if (closestPlatform) {
+            const shadowScale = Math.max(0.3, 1 - (minDistance / 200));
+            const shadowAlpha = Math.max(0.1, 0.6 - (minDistance / 400));
+            
+            const shadowWidth = player.width * 0.8 * shadowScale;
+            const shadowHeight = 8 * shadowScale;
+            
+            const shadowX = player.x + (player.width - shadowWidth) / 2;
+            const shadowY = closestPlatform.y;
+            
+            this.ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
+            
+            this.ctx.beginPath();
+            this.ctx.ellipse(
+                shadowX + shadowWidth / 2,
+                shadowY,
+                shadowWidth / 2,
+                shadowHeight / 2,
+                0, 0, Math.PI * 2
+            );
+            this.ctx.fill();
+        } else {
+            // Если нет платформ под игроком - рисуем тень на земле
+            const groundLevel = 656;
+            const isAboveGround = player.y + player.height <= groundLevel;
+            
+            if (isAboveGround) {
+                const distanceToGround = groundLevel - (player.y + player.height);
+                const shadowScale = Math.max(0.3, 1 - (distanceToGround / 300));
+                const shadowAlpha = Math.max(0.1, 0.6 - (distanceToGround / 500));
+                
+                const shadowWidth = player.width * 0.8 * shadowScale;
+                const shadowHeight = 10 * shadowScale;
+                
+                const shadowX = player.x + (player.width - shadowWidth) / 2;
+                const shadowY = groundLevel;
+                
+                this.ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
+                
+                this.ctx.beginPath();
+                this.ctx.ellipse(
+                    shadowX + shadowWidth / 2,
+                    shadowY,
+                    shadowWidth / 2,
+                    shadowHeight / 2,
+                    0, 0, Math.PI * 2
+                );
+                this.ctx.fill();
+            }
+        }
+        
+        this.ctx.restore();
+    }
+    
+    drawLighting() {
+        // Создаем градиент для освещения от ОЧЕНЬ большого солнца
+        const lightingGradient = this.ctx.createRadialGradient(
+            this.light.x, this.light.y, 100,
+            this.light.x, this.light.y, 1000
+        );
+        
+        lightingGradient.addColorStop(0, 'rgba(255, 255, 200, 0.25)');
+        lightingGradient.addColorStop(0.3, 'rgba(255, 255, 180, 0.15)');
+        lightingGradient.addColorStop(0.6, 'rgba(255, 255, 150, 0.08)');
+        lightingGradient.addColorStop(1, 'rgba(255, 255, 120, 0)');
+        
+        this.ctx.save();
+        this.ctx.globalCompositeOperation = 'overlay';
+        this.ctx.fillStyle = lightingGradient;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.restore();
+    }
+    
     drawPlatforms() {
         for (const platform of this.platforms) {
             if (platform.type === 'ground') {
@@ -403,8 +537,11 @@ class Game {
         
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Всегда рисуем платформы
+        // Рисуем базовые элементы
         this.drawPlatforms();
+        
+        // Рисуем тень перед игроком и эффектами
+        this.drawShadows();
         
         // Обновляем игру только если она активна
         if (this.gameActive) {
@@ -413,11 +550,13 @@ class Game {
             effectsManager.updateEffects(deltaTime, player);
         }
         
-        // Всегда рисуем игрока (даже если игра не активна)
+        // Рисуем игрока и эффекты
         player.draw(this.ctx, this.images);
-        
-        // Всегда рисуем эффекты
         effectsManager.drawEffects(this.ctx, this.images);
+        
+        // Рисуем освещение и солнце поверх всего
+        this.drawLighting();
+        this.drawSun();
         
         requestAnimationFrame((time) => this.gameLoop(time));
     }

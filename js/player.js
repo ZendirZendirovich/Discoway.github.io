@@ -8,14 +8,11 @@ class Player {
         this.velX = 0;
         this.velY = 0;
         
-        // Настройки скорости для разных устройств
-        this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
-        // Меньшая скорость на мобильных устройствах
-        this.speed = this.isMobile ? 3 : 5;
-        this.runSpeed = this.isMobile ? 5 : 8;
-        this.maxWalkSpeed = this.isMobile ? 3 : 5;
-        this.maxRunSpeed = this.isMobile ? 5 : 8;
+        // Фиксированная скорость на всех устройствах
+        this.speed = 5;
+        this.runSpeed = 8;
+        this.maxWalkSpeed = 5;
+        this.maxRunSpeed = 8;
         
         this.isJumping = false;
         this.isRunning = false;
@@ -23,11 +20,15 @@ class Player {
         this.onGround = false;
         this.jumpCooldown = 0;
         this.canJump = true;
-        this.acceleration = this.isMobile ? 0.3 : 0.5;
+        this.acceleration = 0.5;
         this.currentSpeed = 0;
         
         this.GRAVITY = 0.5;
         this.JUMP_FORCE = -15;
+        
+        // Переменная для отслеживания столкновения со стеной
+        this.isAgainstWall = false;
+        this.wallDirection = 0; // -1 слева, 1 справа, 0 нет стены
         
         this.animations = {
             idle: { frames: 1, currentFrame: 0, frameTime: 0, frameDelay: 200 },
@@ -35,6 +36,9 @@ class Player {
             run: { frames: 2, currentFrame: 0, frameTime: 0, frameDelay: 100 },
             jump: { frames: 1, currentFrame: 0, frameTime: 0, frameDelay: 200 }
         };
+
+        // Добавляем контроль времени для фиксированной скорости
+        this.lastUpdateTime = performance.now();
     }
     
     isGameActive() {
@@ -43,6 +47,11 @@ class Player {
     }
     
     update(platforms) {
+        // Фиксированный временной шаг для одинаковой скорости на всех устройствах
+        const currentTime = performance.now();
+        const deltaTime = Math.min((currentTime - this.lastUpdateTime) / 16.67, 2); // Ограничиваем deltaTime
+        this.lastUpdateTime = currentTime;
+
         // Если открыты настройки или игра не активна - блокируем управление
         if (document.getElementById('settings-modal').style.display === 'block' || !this.isGameActive()) {
             this.velX = 0;
@@ -74,25 +83,25 @@ class Player {
         const wantsToRun = controls.isActionPressed('run');
         const isMoving = controls.isActionPressed('left') || controls.isActionPressed('right');
         
-        // Разгон и замедление
+        // Разгон и замедление с учетом deltaTime
         if (isMoving) {
             const targetSpeed = wantsToRun ? this.maxRunSpeed : this.maxWalkSpeed;
-            this.currentSpeed = Math.min(this.currentSpeed + this.acceleration, targetSpeed);
+            this.currentSpeed = Math.min(this.currentSpeed + this.acceleration * deltaTime, targetSpeed);
             this.isRunning = this.currentSpeed >= this.maxRunSpeed * 0.8;
         } else {
-            this.currentSpeed = Math.max(this.currentSpeed - this.acceleration * 2, 0);
+            this.currentSpeed = Math.max(this.currentSpeed - this.acceleration * 2 * deltaTime, 0);
             this.isRunning = false;
         }
         
-        // Движение влево
-        if (controls.isActionPressed('left')) {
-            this.velX = -this.currentSpeed;
+        // Движение влево (только если не уперлись в стену справа)
+        if (controls.isActionPressed('left') && !(this.isAgainstWall && this.wallDirection === 1)) {
+            this.velX = -this.currentSpeed * deltaTime;
             this.facingRight = false;
         }
         
-        // Движение вправо
-        if (controls.isActionPressed('right')) {
-            this.velX = this.currentSpeed;
+        // Движение вправо (только если не уперлись в стену слева)
+        if (controls.isActionPressed('right') && !(this.isAgainstWall && this.wallDirection === -1)) {
+            this.velX = this.currentSpeed * deltaTime;
             this.facingRight = true;
         }
         
@@ -114,8 +123,8 @@ class Player {
             );
         }
         
-        // Применяем гравитацию
-        this.velY += this.GRAVITY;
+        // Применяем гравитацию с учетом deltaTime
+        this.velY += this.GRAVITY * deltaTime;
         
         // Обновляем позицию
         this.x += this.velX;
@@ -130,40 +139,69 @@ class Player {
     
     checkCollisions(platforms) {
         this.onGround = false;
+        this.isAgainstWall = false;
+        this.wallDirection = 0;
         
         for (const platform of platforms) {
+            // Проверяем пересечение по осям
             if (this.x < platform.x + platform.width &&
                 this.x + this.width > platform.x &&
                 this.y < platform.y + platform.height &&
                 this.y + this.height > platform.y) {
                 
-                // Столкновение сверху
-                if (this.velY > 0 && this.y + this.height - this.velY <= platform.y) {
+                // Вычисляем глубины проникновения с каждой стороны
+                const overlapLeft = (this.x + this.width) - platform.x;
+                const overlapRight = (platform.x + platform.width) - this.x;
+                const overlapTop = (this.y + this.height) - platform.y;
+                const overlapBottom = (platform.y + platform.height) - this.y;
+                
+                // Находим минимальное перекрытие
+                const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+                
+                // Разрешаем коллизию в зависимости от стороны с минимальным перекрытием
+                if (minOverlap === overlapTop && this.velY > 0) {
+                    // Столкновение сверху (игрок падает на платформу)
                     this.y = platform.y - this.height;
                     this.velY = 0;
                     this.onGround = true;
                     this.isJumping = false;
                 }
-                // Столкновение снизу (только для обычных платформ)
-                else if (this.velY < 0 && this.y - this.velY >= platform.y + platform.height && platform.type === 'platform') {
+                else if (minOverlap === overlapBottom && this.velY < 0) {
+                    // Столкновение снизу (игрок ударяется головой)
                     this.y = platform.y + platform.height;
                     this.velY = 0;
                 }
-                // Столкновение сбоку
-                else if (this.velX !== 0) {
-                    if (this.velX > 0) {
-                        this.x = platform.x - this.width;
-                    } else {
-                        this.x = platform.x + platform.width;
-                    }
+                else if (minOverlap === overlapLeft && this.velX > 0) {
+                    // Столкновение справа
+                    this.x = platform.x - this.width;
+                    this.velX = 0;
+                    this.isAgainstWall = true;
+                    this.wallDirection = 1;
+                }
+                else if (minOverlap === overlapRight && this.velX < 0) {
+                    // Столкновение слева
+                    this.x = platform.x + platform.width;
+                    this.velX = 0;
+                    this.isAgainstWall = true;
+                    this.wallDirection = -1;
                 }
             }
         }
     }
     
     constrainToBounds() {
-        if (this.x < 0) this.x = 0;
-        if (this.x + this.width > 1280) this.x = 1280 - this.width;
+        if (this.x < 0) {
+            this.x = 0;
+            this.velX = 0;
+            this.isAgainstWall = true;
+            this.wallDirection = -1;
+        }
+        if (this.x + this.width > 1280) {
+            this.x = 1280 - this.width;
+            this.velX = 0;
+            this.isAgainstWall = true;
+            this.wallDirection = 1;
+        }
         if (this.y > 720) {
             this.y = 500;
             this.velY = 0;
