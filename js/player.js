@@ -24,7 +24,7 @@ class Player {
         this.currentSpeed = 0;
         
         this.GRAVITY = 0.5;
-        this.JUMP_FORCE = -15;
+        this.JUMP_FORCE = -15; // Уменьшил силу прыжка
         
         // Переменная для отслеживания столкновения со стеной
         this.isAgainstWall = false;
@@ -37,7 +37,7 @@ class Player {
             jump: { frames: 1, currentFrame: 0, frameTime: 0, frameDelay: 200 }
         };
 
-        // Добавляем контроль времени для фиксированной скорости
+        // Убираем контроль времени для прыжка, оставляем только для анимаций
         this.lastUpdateTime = performance.now();
     }
     
@@ -47,9 +47,9 @@ class Player {
     }
     
     update(platforms) {
-        // Фиксированный временной шаг для одинаковой скорости на всех устройствах
+        // ФИКСИРОВАННАЯ физика - не зависим от deltaTime для движения и прыжка
         const currentTime = performance.now();
-        const deltaTime = Math.min((currentTime - this.lastUpdateTime) / 16.67, 2); // Ограничиваем deltaTime
+        const deltaTime = Math.min((currentTime - this.lastUpdateTime) / 16.67, 2);
         this.lastUpdateTime = currentTime;
 
         // Если открыты настройки или игра не активна - блокируем управление
@@ -83,34 +83,34 @@ class Player {
         const wantsToRun = controls.isActionPressed('run');
         const isMoving = controls.isActionPressed('left') || controls.isActionPressed('right');
         
-        // Разгон и замедление с учетом deltaTime
+        // Разгон и замедление - ФИКСИРОВАННОЕ, не зависим от deltaTime
         if (isMoving) {
             const targetSpeed = wantsToRun ? this.maxRunSpeed : this.maxWalkSpeed;
-            this.currentSpeed = Math.min(this.currentSpeed + this.acceleration * deltaTime, targetSpeed);
+            this.currentSpeed = Math.min(this.currentSpeed + this.acceleration, targetSpeed);
             this.isRunning = this.currentSpeed >= this.maxRunSpeed * 0.8;
         } else {
-            this.currentSpeed = Math.max(this.currentSpeed - this.acceleration * 2 * deltaTime, 0);
+            this.currentSpeed = Math.max(this.currentSpeed - this.acceleration * 2, 0);
             this.isRunning = false;
         }
         
         // Движение влево (только если не уперлись в стену справа)
         if (controls.isActionPressed('left') && !(this.isAgainstWall && this.wallDirection === 1)) {
-            this.velX = -this.currentSpeed * deltaTime;
+            this.velX = -this.currentSpeed;
             this.facingRight = false;
         }
         
         // Движение вправо (только если не уперлись в стену слева)
         if (controls.isActionPressed('right') && !(this.isAgainstWall && this.wallDirection === -1)) {
-            this.velX = this.currentSpeed * deltaTime;
+            this.velX = this.currentSpeed;
             this.facingRight = true;
         }
         
-        // Прыжок
+        // Прыжок - ФИКСИРОВАННАЯ сила, не зависим от deltaTime
         if (controls.isActionPressed('jump') && this.onGround && this.jumpCooldown === 0 && this.canJump) {
             this.velY = this.JUMP_FORCE;
             this.isJumping = true;
             this.onGround = false;
-            this.jumpCooldown = 20;
+            this.jumpCooldown = 10; // Уменьшил кулдаун
             this.canJump = false;
             
             // Активируем эффект прыжка прямо на персонаже
@@ -123,8 +123,8 @@ class Player {
             );
         }
         
-        // Применяем гравитацию с учетом deltaTime
-        this.velY += this.GRAVITY * deltaTime;
+        // Применяем гравитацию - ФИКСИРОВАННАЯ, не зависим от deltaTime
+        this.velY += this.GRAVITY;
         
         // Обновляем позицию
         this.x += this.velX;
@@ -135,6 +135,9 @@ class Player {
         
         // Ограничение по границам экрана
         this.constrainToBounds();
+        
+        // Обновляем анимации с deltaTime (только для анимаций это нормально)
+        this.updateAnimations(deltaTime);
     }
     
     checkCollisions(platforms) {
@@ -222,7 +225,7 @@ class Player {
             currentAnim = this.animations.idle;
         }
         
-        // Обновляем кадр анимации
+        // Обновляем кадр анимации (только анимации используют deltaTime)
         currentAnim.frameTime += deltaTime;
         if (currentAnim.frameTime >= currentAnim.frameDelay) {
             currentAnim.frameTime = 0;
