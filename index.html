@@ -7,6 +7,14 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+    <!-- Экран поворота для мобильных -->
+    <div id="rotate-screen">
+        <div class="rotate-content">
+            <div class="rotate-icon">📱</div>
+            <div class="rotate-text">Пожалуйста, переверните устройство в горизонтальное положение</div>
+        </div>
+    </div>
+
     <div id="game-container">
         <canvas id="game-canvas" width="1280" height="720"></canvas>
         
@@ -52,6 +60,14 @@
                 <button class="modal-btn" id="save-settings">СОХРАНИТЬ</button>
             </div>
         </div>
+
+        <div id="mobile-settings-modal">
+            <h2>Настройки</h2>
+            <div class="mobile-settings-content">
+                <p>Здесь ничего нет :)</p>
+            </div>
+            <button class="modal-btn" id="close-mobile-settings">ЗАКРЫТЬ</button>
+        </div>
         
         <div id="loading">
             <div>ЗАГРУЗКА РЕСУРСОВ...</div>
@@ -63,12 +79,15 @@
         <!-- Мобильные кнопки управления -->
         <div id="mobile-controls">
             <div class="mobile-controls-left">
-                <button class="mobile-btn" id="mobile-left">←</button>
-                <button class="mobile-btn" id="mobile-right">→</button>
+                <div id="joystick-container">
+                    <div id="joystick-base"></div>
+                    <div id="joystick-handle"></div>
+                </div>
             </div>
             <div class="mobile-controls-right">
-                <button class="mobile-btn" id="mobile-run">БЕГ</button>
-                <button class="mobile-btn" id="mobile-jump">ПРЫЖОК</button>
+                <button class="mobile-btn action-btn" id="mobile-run" title="Бег">🏃</button>
+                <button class="mobile-btn action-btn" id="mobile-jump" title="Прыжок">🔄</button>
+                <button class="mobile-btn action-btn" id="mobile-settings" title="Настройки">⚙</button>
             </div>
         </div>
     </div>
