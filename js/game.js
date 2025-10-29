@@ -6,6 +6,7 @@ class Game {
         this.loading = document.getElementById('loading');
         this.progressBar = document.getElementById('progress-bar');
         this.startScreen = document.getElementById('start-screen');
+        this.rotateScreen = document.getElementById('rotate-screen');
         
         this.images = {};
         this.platforms = [
@@ -20,12 +21,111 @@ class Game {
         this.lastTime = 0;
         this.gameStarted = false;
         this.gameActive = false;
+        this.isMobile = this.checkIfMobile();
         
-        // Сразу показываем белый экран загрузки
-        this.loading.style.display = 'block';
-        this.startScreen.style.display = 'none';
+        // Центрируем игровой контейнер
+        this.centerGameContainer();
+        
+        // Настраиваем обработчик ориентации
+        this.setupOrientationHandler();
+        
+        // Показываем соответствующий экран в зависимости от устройства и ориентации
+        this.showAppropriateScreen();
         
         this.loadImages();
+        
+        // Обработчик изменения размера окна
+        window.addEventListener('resize', () => {
+            this.centerGameContainer();
+            this.handleOrientationChange();
+        });
+        
+        // Обработчик изменения ориентации
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                this.handleOrientationChange();
+            }, 100);
+        });
+    }
+    
+    checkIfMobile() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+               (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
+    }
+    
+    setupOrientationHandler() {
+        // Также проверяем resize для детекции ориентации
+        window.addEventListener('resize', () => {
+            this.handleOrientationChange();
+        });
+    }
+    
+    handleOrientationChange() {
+        if (this.isMobile) {
+            const isLandscape = window.innerWidth > window.innerHeight;
+            
+            if (isLandscape) {
+                // Ландшафтная ориентация - скрываем экран поворота
+                if (this.rotateScreen) {
+                    this.rotateScreen.style.display = 'none';
+                }
+                if (this.loading) {
+                    this.loading.style.display = 'block';
+                }
+                // Показываем игровой контейнер
+                const gameContainer = document.getElementById('game-container');
+                if (gameContainer) {
+                    gameContainer.style.display = 'block';
+                }
+                // Меняем фон body
+                document.body.style.background = 'linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d)';
+            } else {
+                // Портретная ориентация - показываем экран поворота
+                if (this.rotateScreen) {
+                    this.rotateScreen.style.display = 'flex';
+                }
+                if (this.loading) {
+                    this.loading.style.display = 'none';
+                }
+                // Скрываем игровой контейнер
+                const gameContainer = document.getElementById('game-container');
+                if (gameContainer) {
+                    gameContainer.style.display = 'none';
+                }
+                // Меняем фон body на черный
+                document.body.style.background = '#000';
+            }
+        }
+    }
+    
+    showAppropriateScreen() {
+        if (this.isMobile) {
+            const isLandscape = window.innerWidth > window.innerHeight;
+            
+            if (isLandscape) {
+                // Ландшафтная ориентация - показываем загрузку
+                this.loading.style.display = 'block';
+                this.rotateScreen.style.display = 'none';
+                document.body.style.background = 'linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d)';
+            } else {
+                // Портретная ориентация - показываем экран поворота
+                this.loading.style.display = 'none';
+                this.rotateScreen.style.display = 'flex';
+                document.body.style.background = '#000';
+            }
+        } else {
+            // Десктоп - сразу показываем загрузку
+            this.loading.style.display = 'block';
+            this.rotateScreen.style.display = 'none';
+            document.body.style.background = 'linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d)';
+        }
+    }
+    
+    centerGameContainer() {
+        const gameContainer = document.getElementById('game-container');
+        if (gameContainer) {
+            gameContainer.style.margin = 'auto';
+        }
     }
     
     setupStartScreen() {
@@ -35,16 +135,12 @@ class Game {
     }
     
     checkMobileDevice() {
-        // Проверяем является ли устройство мобильным
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-                        (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
-        
-        if (isMobile) {
+        if (this.isMobile) {
             console.log("Мобильное устройство обнаружено");
-            // Показываем мобильные кнопки
-            const mobileControls = document.getElementById('mobile-controls');
-            if (mobileControls) {
-                mobileControls.style.display = 'flex';
+            // Скрываем обычную кнопку настроек на мобильных
+            const settingsBtn = document.getElementById('settings-btn');
+            if (settingsBtn) {
+                settingsBtn.style.display = 'none';
             }
         }
     }
@@ -54,7 +150,7 @@ class Game {
             this.gameActive = true;
             this.startScreen.style.display = 'none';
             
-            // Проверяем мобильное устройство и показываем кнопки
+            // Проверяем мобильное устройство
             this.checkMobileDevice();
             
             audioManager.playBackgroundMusic();
@@ -104,6 +200,15 @@ class Game {
         
         let loaded = 0;
         const total = Object.keys(imageSources).length;
+        
+        // Проверяем ориентацию перед началом загрузки
+        if (this.isMobile) {
+            const isLandscape = window.innerWidth > window.innerHeight;
+            if (!isLandscape) {
+                console.log("Ожидаем ландшафтную ориентацию для загрузки ресурсов");
+                return; // Не загружаем ресурсы пока телефон не перевернут
+            }
+        }
         
         for (const [key, src] of Object.entries(imageSources)) {
             this.images[key] = new Image();
