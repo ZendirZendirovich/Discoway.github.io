@@ -11,22 +11,61 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    padding: 20px;
     color: white;
     overflow: hidden;
+    position: relative;
+}
+
+/* Экран поворота */
+#rotate-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    flex-direction: column;
+}
+
+.rotate-content {
+    text-align: center;
+    padding: 20px;
+}
+
+.rotate-icon {
+    font-size: 80px;
+    margin-bottom: 30px;
+    animation: rotate 2s infinite ease-in-out;
+}
+
+.rotate-text {
+    font-size: 24px;
+    color: white;
+    max-width: 300px;
+    line-height: 1.4;
+}
+
+@keyframes rotate {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(90deg); }
 }
 
 #game-container {
     position: relative;
-    width: min(1280px, 95vw);
-    height: min(720px, 80vh);
-    aspect-ratio: 16/9;
+    width: 1280px;
+    height: 720px;
     border: 4px solid #2c3e50;
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     overflow: hidden;
     background: linear-gradient(to bottom, #87CEEB, #1E90FF);
     image-rendering: pixelated;
+    /* Фиксированный размер и центрирование */
+    margin: auto;
 }
 
 #game-canvas {
@@ -234,6 +273,36 @@ body {
     transform: translateY(-2px);
 }
 
+#mobile-settings-modal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(30, 30, 40, 0.95);
+    border-radius: 15px;
+    padding: 30px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    z-index: 30;
+    display: none;
+    pointer-events: auto;
+    text-align: center;
+}
+
+#mobile-settings-modal h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #3498db;
+    font-size: 24px;
+}
+
+.mobile-settings-content {
+    margin: 30px 0;
+    font-size: 18px;
+    color: #ecf0f1;
+}
+
 #loading {
     position: absolute;
     top: 50%;
@@ -282,35 +351,68 @@ body {
 
 .mobile-controls-left, .mobile-controls-right {
     display: flex;
+    align-items: center;
     gap: 15px;
     pointer-events: auto;
 }
 
-.mobile-btn {
+/* Джойстик */
+#joystick-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+#joystick-base {
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    position: relative;
+}
+
+#joystick-handle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    transition: all 0.1s;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+#joystick-handle.active {
+    background: rgba(52, 152, 219, 0.9);
+}
+
+.mobile-btn.action-btn {
     width: 70px;
     height: 70px;
-    border: 3px solid rgba(255, 255, 255, 0.7);
+    border: none;
     border-radius: 50%;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.7);
     color: white;
-    font-size: 24px;
-    font-weight: bold;
+    font-size: 28px;
+    cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
-    cursor: pointer;
     user-select: none;
     touch-action: manipulation;
     transition: all 0.2s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-.mobile-btn:active {
+.mobile-btn.action-btn:active {
     background: rgba(255, 255, 255, 0.3);
     transform: scale(0.95);
 }
 
 #mobile-run {
-    font-size: 16px;
     background: rgba(231, 76, 60, 0.7);
 }
 
@@ -318,28 +420,46 @@ body {
     background: rgba(46, 204, 113, 0.7);
 }
 
+#mobile-settings {
+    background: rgba(52, 152, 219, 0.7);
+    font-size: 24px;
+}
+
 /* Стили для мобильных устройств */
 @media (max-width: 768px) {
     body {
         padding: 10px;
         touch-action: manipulation;
+        overflow: auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: #000;
     }
     
     #game-container {
-        width: 100vw;
-        height: calc(100vw * 9 / 16);
-        max-width: 100vw;
-        max-height: calc(100vh - 20px);
+        width: 100%;
+        height: auto;
+        max-width: 1280px;
+        max-height: 720px;
+        aspect-ratio: 16/9;
         border: 2px solid #2c3e50;
         border-radius: 8px;
+        margin: auto;
     }
     
     #mobile-controls {
         display: flex !important;
     }
     
+    #settings-btn {
+        display: none;
+    }
+    
     #start-message {
         font-size: 24px;
+        padding: 0 20px;
     }
     
     .control-setting {
@@ -359,6 +479,27 @@ body {
     .progress-bar {
         width: 250px;
     }
+    
+    /* Адаптация джойстика для маленьких экранов */
+    #joystick-container {
+        width: 100px;
+        height: 100px;
+    }
+    
+    #joystick-handle {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .mobile-btn.action-btn {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+    
+    #mobile-settings {
+        font-size: 20px;
+    }
 }
 
 /* Стили для очень маленьких экранов */
@@ -375,18 +516,53 @@ body {
         font-size: 20px;
     }
     
+    #mobile-settings-modal {
+        padding: 20px;
+    }
+    
+    #mobile-settings-modal h2 {
+        font-size: 20px;
+    }
+    
     .control-setting label {
         font-size: 14px;
     }
     
-    .mobile-btn {
-        width: 60px;
-        height: 60px;
+    .mobile-settings-content {
+        font-size: 16px;
+    }
+    
+    .rotate-text {
         font-size: 20px;
     }
     
-    #mobile-run {
-        font-size: 14px;
+    .rotate-icon {
+        font-size: 60px;
+    }
+    
+    /* Еще меньше кнопки для очень маленьких экранов */
+    #joystick-container {
+        width: 90px;
+        height: 90px;
+    }
+    
+    #joystick-handle {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .mobile-btn.action-btn {
+        width: 55px;
+        height: 55px;
+        font-size: 22px;
+    }
+    
+    #mobile-settings {
+        font-size: 18px;
+    }
+    
+    .mobile-controls-left, .mobile-controls-right {
+        gap: 10px;
     }
 }
 
@@ -394,5 +570,45 @@ body {
 @media (max-width: 768px) and (hover: none) and (pointer: coarse) {
     #mobile-controls {
         display: flex;
+    }
+}
+
+/* Скрываем обычные настройки на мобильных устройствах */
+@media (max-width: 768px) {
+    #settings-modal {
+        display: none !important;
+    }
+}
+
+/* Показываем экран поворота на мобильных в портретной ориентации */
+@media (max-width: 768px) and (orientation: portrait) {
+    #rotate-screen {
+        display: flex;
+    }
+    
+    #game-container {
+        display: none !important;
+    }
+}
+
+/* Скрываем экран поворота в ландшафтной ориентации */
+@media (max-width: 768px) and (orientation: landscape) {
+    #rotate-screen {
+        display: none;
+    }
+    
+    #game-container {
+        display: block;
+    }
+    
+    body {
+        background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+    }
+}
+
+/* Для десктопов всегда скрываем экран поворота */
+@media (min-width: 769px) {
+    #rotate-screen {
+        display: none;
     }
 }
