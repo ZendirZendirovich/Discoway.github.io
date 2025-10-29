@@ -28,7 +28,7 @@
         </div>
         
         <div id="settings-modal">
-            <h2>НАСТРОЙКИ УПРАВЛЕНИЯ</h2>
+            <h2>НАСТРОЙКИ</h2>
             
             <div class="control-setting">
                 <label>ДВИЖЕНИЕ ВЛЕВО:</label>
@@ -49,6 +49,23 @@
                 <label>ПРЫЖОК:</label>
                 <div class="key-input" data-action="jump">Space</div>
             </div>
+
+            <div class="control-setting">
+                <label>ГРОМКОСТЬ МУЗЫКИ:</label>
+                <div class="volume-control">
+                    <button class="volume-btn" id="volume-down">-</button>
+                    <div class="volume-bar">
+                        <div class="volume-level" id="volume-level"></div>
+                    </div>
+                    <button class="volume-btn" id="volume-up">+</button>
+                    <div class="volume-value" id="volume-value">50%</div>
+                </div>
+            </div>
+
+            <div class="control-setting">
+                <label>МУЗЫКА:</label>
+                <button class="music-toggle-btn" id="toggle-music">ВКЛЮЧЕНО</button>
+            </div>
             
             <div class="control-setting">
                 <label>СТАТУС ГЕЙМПАДА:</label>
@@ -64,7 +81,21 @@
         <div id="mobile-settings-modal">
             <h2>Настройки</h2>
             <div class="mobile-settings-content">
-                <p>Здесь ничего нет :)</p>
+                <div class="control-setting">
+                    <label>ГРОМКОСТЬ МУЗЫКИ:</label>
+                    <div class="volume-control">
+                        <button class="volume-btn" id="mobile-volume-down">-</button>
+                        <div class="volume-bar">
+                            <div class="volume-level" id="mobile-volume-level"></div>
+                        </div>
+                        <button class="volume-btn" id="mobile-volume-up">+</button>
+                    </div>
+                    <div class="volume-value" id="mobile-volume-value">50%</div>
+                </div>
+                <div class="control-setting">
+                    <label>МУЗЫКА:</label>
+                    <button class="music-toggle-btn" id="mobile-toggle-music">ВКЛЮЧЕНО</button>
+                </div>
             </div>
             <button class="modal-btn" id="close-mobile-settings">ЗАКРЫТЬ</button>
         </div>
