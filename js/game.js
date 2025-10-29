@@ -34,10 +34,29 @@ class Game {
         });
     }
     
+    checkMobileDevice() {
+        // Проверяем является ли устройство мобильным
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                        (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
+        
+        if (isMobile) {
+            console.log("Мобильное устройство обнаружено");
+            // Показываем мобильные кнопки
+            const mobileControls = document.getElementById('mobile-controls');
+            if (mobileControls) {
+                mobileControls.style.display = 'flex';
+            }
+        }
+    }
+    
     startGame() {
         if (!this.gameActive && this.gameStarted) {
             this.gameActive = true;
             this.startScreen.style.display = 'none';
+            
+            // Проверяем мобильное устройство и показываем кнопки
+            this.checkMobileDevice();
+            
             audioManager.playBackgroundMusic();
             console.log("Игра началась! Музыка запущена.");
             
@@ -92,7 +111,7 @@ class Game {
                 loaded++;
                 const progress = (loaded / total) * 100;
                 this.progressBar.style.width = `${progress}%`;
-                this.loading.textContent = `ЗАГРУЗКА РЕСУРСОВ... ${Math.round(progress)}%`;
+                this.loading.querySelector('div').textContent = `ЗАГРУЗКА РЕСУРСОВ... ${Math.round(progress)}%`;
                 
                 if (loaded === total) {
                     setTimeout(() => {
@@ -114,7 +133,7 @@ class Game {
                 loaded++;
                 const progress = (loaded / total) * 100;
                 this.progressBar.style.width = `${progress}%`;
-                this.loading.textContent = `ЗАГРУЗКА РЕСУРСОВ... ${Math.round(progress)}%`;
+                this.loading.querySelector('div').textContent = `ЗАГРУЗКА РЕСУРСОВ... ${Math.round(progress)}%`;
                 
                 if (loaded === total) {
                     setTimeout(() => {

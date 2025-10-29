@@ -10,9 +10,11 @@ class Controls {
         
         this.keys = {};
         this.listeningInput = null;
+        this.mobileButtons = {};
         
         this.loadControls();
         this.setupEventListeners();
+        this.setupMobileControls();
     }
     
     loadControls() {
@@ -24,6 +26,105 @@ class Controls {
     
     saveControls() {
         localStorage.setItem('platformerControls', JSON.stringify(this.settings));
+    }
+    
+    setupMobileControls() {
+        // Инициализируем состояние мобильных кнопок
+        this.mobileButtons = {
+            left: false,
+            right: false,
+            run: false,
+            jump: false
+        };
+        
+        // Находим кнопки только если они существуют
+        const leftBtn = document.getElementById('mobile-left');
+        const rightBtn = document.getElementById('mobile-right');
+        const runBtn = document.getElementById('mobile-run');
+        const jumpBtn = document.getElementById('mobile-jump');
+        
+        if (leftBtn && rightBtn && runBtn && jumpBtn) {
+            // Кнопка влево
+            leftBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.mobileButtons.left = true;
+            });
+            
+            leftBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                this.mobileButtons.left = false;
+            });
+            
+            leftBtn.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                this.mobileButtons.left = false;
+            });
+            
+            // Кнопка вправо
+            rightBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.mobileButtons.right = true;
+            });
+            
+            rightBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                this.mobileButtons.right = false;
+            });
+            
+            rightBtn.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                this.mobileButtons.right = false;
+            });
+            
+            // Кнопка бега
+            runBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.mobileButtons.run = true;
+            });
+            
+            runBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                this.mobileButtons.run = false;
+            });
+            
+            runBtn.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                this.mobileButtons.run = false;
+            });
+            
+            // Кнопка прыжка
+            jumpBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.mobileButtons.jump = true;
+            });
+            
+            jumpBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                this.mobileButtons.jump = false;
+            });
+            
+            jumpBtn.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                this.mobileButtons.jump = false;
+            });
+            
+            // Также добавляем обработчики для мыши (для тестирования)
+            leftBtn.addEventListener('mousedown', () => this.mobileButtons.left = true);
+            leftBtn.addEventListener('mouseup', () => this.mobileButtons.left = false);
+            leftBtn.addEventListener('mouseleave', () => this.mobileButtons.left = false);
+            
+            rightBtn.addEventListener('mousedown', () => this.mobileButtons.right = true);
+            rightBtn.addEventListener('mouseup', () => this.mobileButtons.right = false);
+            rightBtn.addEventListener('mouseleave', () => this.mobileButtons.right = false);
+            
+            runBtn.addEventListener('mousedown', () => this.mobileButtons.run = true);
+            runBtn.addEventListener('mouseup', () => this.mobileButtons.run = false);
+            runBtn.addEventListener('mouseleave', () => this.mobileButtons.run = false);
+            
+            jumpBtn.addEventListener('mousedown', () => this.mobileButtons.jump = true);
+            jumpBtn.addEventListener('mouseup', () => this.mobileButtons.jump = false);
+            jumpBtn.addEventListener('mouseleave', () => this.mobileButtons.jump = false);
+        }
     }
     
     setupEventListeners() {
@@ -114,8 +215,13 @@ class Controls {
         return keyboardPressed;
     }
     
+    isMobileButtonPressed(action) {
+        return this.mobileButtons[action] || false;
+    }
+    
     isActionPressed(action) {
         const keyboardPressed = this.isKeyPressed(action);
+        const mobilePressed = this.isMobileButtonPressed(action);
         
         let gamepadPressed = false;
         if (gamepadManager.connected) {
@@ -135,7 +241,7 @@ class Controls {
             }
         }
         
-        return keyboardPressed || gamepadPressed;
+        return keyboardPressed || mobilePressed || gamepadPressed;
     }
 }
 
