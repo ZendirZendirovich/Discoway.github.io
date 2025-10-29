@@ -195,6 +195,7 @@ body {
 .control-setting label {
     font-size: 18px;
     font-weight: 500;
+    flex: 1;
 }
 
 .key-input {
@@ -208,6 +209,7 @@ body {
     text-align: center;
     cursor: pointer;
     transition: all 0.3s;
+    flex-shrink: 0;
 }
 
 .key-input:focus {
@@ -221,6 +223,89 @@ body {
     border-color: #2ecc71;
 }
 
+.volume-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    justify-content: flex-end;
+}
+
+.volume-btn {
+    width: 35px;
+    height: 35px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(52, 152, 219, 0.7);
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.volume-btn:hover {
+    background: rgba(41, 128, 185, 0.9);
+    transform: scale(1.1);
+}
+
+.volume-bar {
+    width: 120px;
+    height: 16px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.volume-level {
+    height: 100%;
+    background: linear-gradient(90deg, #3498db, #2ecc71);
+    border-radius: 8px;
+    width: 50%;
+    transition: width 0.3s;
+}
+
+.volume-value {
+    font-size: 14px;
+    color: #ecf0f1;
+    min-width: 40px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.music-toggle-btn {
+    background: #2ecc71;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 15px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 120px;
+    flex-shrink: 0;
+}
+
+.music-toggle-btn:hover {
+    background: #27ae60;
+    transform: translateY(-2px);
+}
+
+.music-toggle-btn.muted {
+    background: #e74c3c;
+}
+
+.music-toggle-btn.muted:hover {
+    background: #c0392b;
+}
+
 #gamepad-status {
     background: rgba(0, 0, 0, 0.5);
     color: #e74c3c;
@@ -230,6 +315,7 @@ body {
     font-size: 16px;
     width: 120px;
     text-align: center;
+    flex-shrink: 0;
 }
 
 #gamepad-status.connected {
@@ -287,7 +373,6 @@ body {
     z-index: 30;
     display: none;
     pointer-events: auto;
-    text-align: center;
 }
 
 #mobile-settings-modal h2 {
@@ -298,9 +383,22 @@ body {
 }
 
 .mobile-settings-content {
-    margin: 30px 0;
-    font-size: 18px;
-    color: #ecf0f1;
+    margin: 0;
+}
+
+.mobile-settings-content .control-setting {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+}
+
+.mobile-settings-content .control-setting label {
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+.mobile-settings-content .volume-control {
+    justify-content: center;
 }
 
 #loading {
@@ -417,8 +515,8 @@ body {
     font-size: 24px;
 }
 
-/* Стили для мобильных устройств */
-@media (max-width: 768px) {
+/* Стили для мобильных устройств и планшетов */
+@media (max-width: 1024px) {
     body {
         padding: 10px;
         touch-action: manipulation;
@@ -449,7 +547,7 @@ body {
     }
     
     #start-message {
-        font-size: 24px;
+        font-size: 32px;
         padding: 0 20px;
     }
     
@@ -463,35 +561,41 @@ body {
     }
     
     #loading {
-        font-size: 18px;
-        padding: 20px 30px;
+        font-size: 20px;
+        padding: 25px 35px;
     }
     
     .progress-bar {
-        width: 250px;
-    }
-    
-    /* Адаптация кнопок для маленьких экранов */
-    .mobile-btn.arrow-btn,
-    .mobile-btn.action-btn {
-        width: 60px;
-        height: 60px;
-        font-size: 28px;
-    }
-    
-    .mobile-btn.action-btn {
-        font-size: 24px;
-    }
-    
-    #mobile-settings {
-        font-size: 20px;
+        width: 280px;
     }
 }
 
-/* Стили для очень маленьких экранов */
-@media (max-width: 480px) {
+/* Стили для планшетов (768px - 1024px) */
+@media (max-width: 1024px) and (min-width: 769px) {
+    .mobile-btn.arrow-btn,
+    .mobile-btn.action-btn {
+        width: 80px;
+        height: 80px;
+        font-size: 36px;
+    }
+    
+    .mobile-btn.action-btn {
+        font-size: 30px;
+    }
+    
+    #mobile-settings {
+        font-size: 26px;
+    }
+    
+    .mobile-controls-left, .mobile-controls-right {
+        gap: 20px;
+    }
+}
+
+/* Стили для мобильных телефонов */
+@media (max-width: 768px) {
     #start-message {
-        font-size: 20px;
+        font-size: 24px;
     }
     
     #settings-modal {
@@ -518,6 +622,10 @@ body {
         font-size: 16px;
     }
     
+    .volume-bar {
+        width: 100px;
+    }
+    
     .rotate-text {
         font-size: 20px;
     }
@@ -526,6 +634,25 @@ body {
         font-size: 60px;
     }
     
+    /* Адаптация кнопок для маленьких экранов */
+    .mobile-btn.arrow-btn,
+    .mobile-btn.action-btn {
+        width: 60px;
+        height: 60px;
+        font-size: 28px;
+    }
+    
+    .mobile-btn.action-btn {
+        font-size: 24px;
+    }
+    
+    #mobile-settings {
+        font-size: 20px;
+    }
+}
+
+/* Стили для очень маленьких экранов */
+@media (max-width: 480px) {
     /* Еще меньше кнопки для очень маленьких экранов */
     .mobile-btn.arrow-btn,
     .mobile-btn.action-btn {
@@ -545,24 +672,40 @@ body {
     .mobile-controls-left, .mobile-controls-right {
         gap: 10px;
     }
+    
+    .volume-bar {
+        width: 80px;
+    }
+    
+    .volume-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 16px;
+    }
+    
+    .music-toggle-btn {
+        min-width: 100px;
+        font-size: 12px;
+        padding: 6px 12px;
+    }
 }
 
-/* Показываем кнопки только на мобильных устройствах */
-@media (max-width: 768px) and (hover: none) and (pointer: coarse) {
+/* Показываем кнопки на мобильных устройствах и планшетах */
+@media (max-width: 1024px) and (hover: none) and (pointer: coarse) {
     #mobile-controls {
         display: flex;
     }
 }
 
-/* Скрываем обычные настройки на мобильных устройствах */
-@media (max-width: 768px) {
+/* Скрываем обычные настройки на мобильных устройствах и планшетах */
+@media (max-width: 1024px) {
     #settings-modal {
         display: none !important;
     }
 }
 
 /* Показываем экран поворота на мобильных в портретной ориентации */
-@media (max-width: 768px) and (orientation: portrait) {
+@media (max-width: 1024px) and (orientation: portrait) {
     #rotate-screen {
         display: flex;
     }
@@ -577,7 +720,7 @@ body {
 }
 
 /* Скрываем экран поворота в ландшафтной ориентации */
-@media (max-width: 768px) and (orientation: landscape) {
+@media (max-width: 1024px) and (orientation: landscape) {
     #rotate-screen {
         display: none;
     }
@@ -592,7 +735,7 @@ body {
 }
 
 /* Для десктопов всегда скрываем экран поворота */
-@media (min-width: 769px) {
+@media (min-width: 1025px) {
     #rotate-screen {
         display: none;
     }
