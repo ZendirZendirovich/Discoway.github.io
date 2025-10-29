@@ -7,18 +7,24 @@ class Player {
         this.height = 64;
         this.velX = 0;
         this.velY = 0;
-        this.speed = 5;
-        this.runSpeed = 8;
+        
+        // Настройки скорости для разных устройств
+        this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // Меньшая скорость на мобильных устройствах
+        this.speed = this.isMobile ? 3 : 5;
+        this.runSpeed = this.isMobile ? 5 : 8;
+        this.maxWalkSpeed = this.isMobile ? 3 : 5;
+        this.maxRunSpeed = this.isMobile ? 5 : 8;
+        
         this.isJumping = false;
         this.isRunning = false;
         this.facingRight = true;
         this.onGround = false;
         this.jumpCooldown = 0;
         this.canJump = true;
-        this.acceleration = 0.5;
+        this.acceleration = this.isMobile ? 0.3 : 0.5;
         this.currentSpeed = 0;
-        this.maxWalkSpeed = 5;
-        this.maxRunSpeed = 8;
         
         this.GRAVITY = 0.5;
         this.JUMP_FORCE = -15;
