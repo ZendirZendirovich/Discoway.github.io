@@ -1,4 +1,3 @@
-// Управление игрой
 class Controls {
     constructor() {
         this.settings = {
@@ -34,7 +33,6 @@ class Controls {
     }
     
     setupMobileControls() {
-        // Находим кнопки только если они существуют
         const leftBtn = document.getElementById('mobile-left');
         const rightBtn = document.getElementById('mobile-right');
         const runBtn = document.getElementById('mobile-run');
@@ -43,11 +41,9 @@ class Controls {
         const closeMobileSettings = document.getElementById('close-mobile-settings');
         const mobileSettingsModal = document.getElementById('mobile-settings-modal');
         
-        // Обновляем смайлы кнопок
         if (runBtn) runBtn.innerHTML = '🏃‍♂️';
         if (jumpBtn) jumpBtn.innerHTML = '⬆️';
         
-        // Кнопка влево
         if (leftBtn) {
             leftBtn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
@@ -69,7 +65,6 @@ class Controls {
             leftBtn.addEventListener('mouseleave', () => this.mobileButtons.left = false);
         }
         
-        // Кнопка вправо
         if (rightBtn) {
             rightBtn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
@@ -91,7 +86,6 @@ class Controls {
             rightBtn.addEventListener('mouseleave', () => this.mobileButtons.right = false);
         }
         
-        // Кнопка бега
         if (runBtn) {
             runBtn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
@@ -113,7 +107,6 @@ class Controls {
             runBtn.addEventListener('mouseleave', () => this.mobileButtons.run = false);
         }
         
-        // Кнопка прыжка
         if (jumpBtn) {
             jumpBtn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
@@ -135,7 +128,6 @@ class Controls {
             jumpBtn.addEventListener('mouseleave', () => this.mobileButtons.jump = false);
         }
         
-        // Кнопка настроек для мобильных
         if (settingsBtn && mobileSettingsModal) {
             settingsBtn.addEventListener('click', () => {
                 mobileSettingsModal.style.display = 'block';

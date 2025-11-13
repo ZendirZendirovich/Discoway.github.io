@@ -1,4 +1,3 @@
-// Фоновая музыка
 class AudioManager {
     constructor() {
         this.backgroundMusic = new Audio('audio/background-music.mp3');
@@ -6,7 +5,6 @@ class AudioManager {
         this.backgroundMusic.loop = true;
         this.gameOverMusic.loop = true;
         
-        // Настройки громкости
         this.volume = 0.5;
         this.isMuted = false;
         this.isPlaying = false;
@@ -21,16 +19,12 @@ class AudioManager {
     }
 
     setupAudioContext() {
-        // Создаем AudioContext для лучшего контроля
         try {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        } catch (e) {
-            console.log("Web Audio API не поддерживается");
-        }
+        } catch (e) {}
     }
 
     setupVisibilityHandler() {
-        // Останавливаем музыку когда страница не активна
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 this.pauseMusic();
@@ -39,19 +33,16 @@ class AudioManager {
             }
         });
 
-        // Останавливаем музыку при закрытии/переходе
         window.addEventListener('beforeunload', () => {
             this.stopMusic();
         });
 
-        // Останавливаем музыку когда страница выгружается
         window.addEventListener('pagehide', () => {
             this.stopMusic();
         });
     }
 
     setupMusicControls() {
-        // Кнопки переключения музыки
         const toggleMusicBtn = document.getElementById('toggle-music');
         const mobileToggleMusicBtn = document.getElementById('mobile-toggle-music');
         
@@ -67,7 +58,6 @@ class AudioManager {
             });
         }
 
-        // Кнопки громкости для десктопа
         const volumeUp = document.getElementById('volume-up');
         const volumeDown = document.getElementById('volume-down');
         
@@ -83,7 +73,6 @@ class AudioManager {
             });
         }
 
-        // Кнопки громкости для мобильных
         const mobileVolumeUp = document.getElementById('mobile-volume-up');
         const mobileVolumeDown = document.getElementById('mobile-volume-down');
         
@@ -147,7 +136,6 @@ class AudioManager {
     }
 
     updateUI() {
-        // Обновляем кнопки переключения музыки
         const toggleMusicBtn = document.getElementById('toggle-music');
         const mobileToggleMusicBtn = document.getElementById('mobile-toggle-music');
         
@@ -171,7 +159,6 @@ class AudioManager {
             }
         }
         
-        // Обновляем полосы громкости
         const volumeLevel = document.getElementById('volume-level');
         const mobileVolumeLevel = document.getElementById('mobile-volume-level');
         const volumeValue = document.getElementById('volume-value');
@@ -196,7 +183,6 @@ class AudioManager {
 
     async playBackgroundMusic() {
         if (!this.isPlaying && !this.isMuted) {
-            // На мобильных устройствах требуем взаимодействие пользователя
             if (this.audioContext && this.audioContext.state === 'suspended') {
                 await this.audioContext.resume();
             }
@@ -205,14 +191,7 @@ class AudioManager {
             try {
                 await this.backgroundMusic.play();
                 this.isPlaying = true;
-                console.log("Фоновая музыка начала играть");
-            } catch (error) {
-                console.log("Ошибка воспроизведения музыки:", error);
-                // На мобильных устройствах может потребоваться жест пользователя
-                if (error.name === 'NotAllowedError') {
-                    console.log("Требуется взаимодействие пользователя для воспроизведения аудио");
-                }
-            }
+            } catch (error) {}
         }
     }
 
@@ -224,10 +203,7 @@ class AudioManager {
         try {
             await this.gameOverMusic.play();
             this.isPlaying = true;
-            console.log("Game Over музыка начала играть");
-        } catch (error) {
-            console.log("Ошибка воспроизведения Game Over музыки:", error);
-        }
+        } catch (error) {}
     }
 
     pauseMusic() {
@@ -238,9 +214,7 @@ class AudioManager {
 
     resumeMusic() {
         if (this.isPlaying && this.currentMusic && !this.isMuted) {
-            this.currentMusic.play().catch(error => {
-                console.log("Ошибка возобновления музыки:", error);
-            });
+            this.currentMusic.play().catch(error => {});
         }
     }
 

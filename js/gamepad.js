@@ -1,4 +1,3 @@
-// Улучшенная поддержка геймпада
 class GamepadManager {
     constructor() {
         this.gamepads = new Map();
@@ -14,7 +13,6 @@ class GamepadManager {
     
     setupEventListeners() {
         window.addEventListener("gamepadconnected", (e) => {
-            console.log("Геймпад подключен:", e.gamepad.id);
             this.gamepads.set(e.gamepad.index, e.gamepad);
             this.connected = true;
             this.gamepadIndex = e.gamepad.index;
@@ -22,7 +20,6 @@ class GamepadManager {
         });
         
         window.addEventListener("gamepaddisconnected", (e) => {
-            console.log("Геймпад отключен:", e.gamepad.id);
             this.gamepads.delete(e.gamepad.index);
             this.connected = this.gamepads.size > 0;
             this.gamepadIndex = this.gamepads.size > 0 ? Array.from(this.gamepads.keys())[0] : null;

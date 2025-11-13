@@ -1,4 +1,3 @@
-// Основной игровой цикл
 class Game {
     constructor() {
         this.canvas = document.getElementById('game-canvas');
@@ -9,15 +8,25 @@ class Game {
         this.rotateScreen = document.getElementById('rotate-screen');
         
         this.images = {};
-        // Исправленные платформы - убираем пересечения
-        this.platforms = [
-            { x: 0, y: 656, width: 1280, height: 64, type: 'ground' },
-            { x: 300, y: 500, width: 200, height: 20, type: 'platform' },
-            { x: 600, y: 400, width: 200, height: 20, type: 'platform' },
-            { x: 200, y: 300, width: 150, height: 20, type: 'platform' },
-            { x: 500, y: 200, width: 150, height: 20, type: 'platform' },
-            { x: 800, y: 350, width: 200, height: 20, type: 'platform' }
-        ];
+        
+        this.currentLevel = new TestLevel();
+        
+        this.roomWidth = this.currentLevel.roomWidth;
+        this.roomHeight = this.currentLevel.roomHeight;
+        this.platforms = this.currentLevel.getPlatforms();
+        
+        this.canvas.width = 1280;
+        this.canvas.height = 720;
+        
+        this.camera = {
+            x: 0,
+            y: 0,
+            width: 1280,
+            height: 720,
+            followSpeed: this.currentLevel.getSettings().cameraFollowSpeed,
+            offsetX: 640,
+            offsetY: 360
+        };
         
         this.lastTime = 0;
         this.gameStarted = false;
@@ -25,40 +34,58 @@ class Game {
         this.isMobile = this.checkIfMobile();
         this.imagesLoaded = false;
 
-        // Настройки освещения - ОЧЕНЬ большое солнце у самого края
         this.light = {
-            x: 1180,  // Еще правее, прямо у края
-            y: 50,    // Очень высоко
-            radius: 400, // ОЧЕНЬ БОЛЬШОЙ радиус
-            intensity: 0.9
+            x: 1100,
+            y: 50,
+            radius: 500,
+            intensity: 0.7
         };
         
-        // Центрируем игровой контейнер
         this.centerGameContainer();
-        
-        // Настраиваем обработчик ориентации
         this.setupOrientationHandler();
-        
-        // Показываем соответствующий экран в зависимости от устройства и ориентации
         this.showAppropriateScreen();
         
-        // Загружаем изображения только если в ландшафтной ориентации
         if (!this.isMobile || this.isLandscape()) {
             this.loadImages();
         }
         
-        // Обработчик изменения размера окна
         window.addEventListener('resize', () => {
             this.centerGameContainer();
             this.handleOrientationChange();
         });
         
-        // Обработчик изменения ориентации
         window.addEventListener('orientationchange', () => {
             setTimeout(() => {
                 this.handleOrientationChange();
             }, 100);
         });
+    }
+    
+    loadLevel(LevelClass) {
+        this.currentLevel = new LevelClass();
+        this.roomWidth = this.currentLevel.roomWidth;
+        this.roomHeight = this.currentLevel.roomHeight;
+        this.platforms = this.currentLevel.getPlatforms();
+        
+        this.camera.followSpeed = this.currentLevel.getSettings().cameraFollowSpeed;
+        
+        const startPos = this.currentLevel.getPlayerStart();
+        player.x = startPos.x;
+        player.y = startPos.y;
+        player.velX = 0;
+        player.velY = 0;
+        player.onGround = false;
+        player.isJumping = false;
+        
+        const settings = this.currentLevel.getSettings();
+        player.GRAVITY = settings.gravity;
+        player.JUMP_FORCE = settings.jumpForce;
+        
+        this.camera.x = player.x - this.camera.offsetX;
+        this.camera.y = player.y - this.camera.offsetY;
+        this.constrainCamera();
+        
+        effectsManager.clearEffects();
     }
     
     checkIfMobile() {
@@ -72,7 +99,6 @@ class Game {
     }
     
     setupOrientationHandler() {
-        // Также проверяем resize для детекции ориентации
         window.addEventListener('resize', () => {
             this.handleOrientationChange();
         });
@@ -83,37 +109,30 @@ class Game {
             const isLandscape = this.isLandscape();
             
             if (isLandscape) {
-                // Ландшафтная ориентация - скрываем экран поворота
                 if (this.rotateScreen) {
                     this.rotateScreen.style.display = 'none';
                 }
-                // Показываем игровой контейнер
                 const gameContainer = document.getElementById('game-container');
                 if (gameContainer) {
                     gameContainer.style.display = 'block';
                 }
-                // Меняем фон body
                 document.body.style.background = 'linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d)';
                 
-                // Загружаем изображения если еще не загружены
                 if (!this.imagesLoaded) {
                     this.loading.style.display = 'block';
                     this.loadImages();
                 }
             } else {
-                // Портретная ориентация - показываем экран поворота
                 if (this.rotateScreen) {
                     this.rotateScreen.style.display = 'flex';
                 }
                 if (this.loading) {
                     this.loading.style.display = 'none';
                 }
-                // Скрываем игровой контейнер
                 const gameContainer = document.getElementById('game-container');
                 if (gameContainer) {
                     gameContainer.style.display = 'none';
                 }
-                // Меняем фон body на черный
                 document.body.style.background = '#000';
             }
         }
@@ -124,18 +143,15 @@ class Game {
             const isLandscape = this.isLandscape();
             
             if (isLandscape) {
-                // Ландшафтная ориентация - показываем загрузку
                 this.loading.style.display = 'block';
                 this.rotateScreen.style.display = 'none';
                 document.body.style.background = 'linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d)';
             } else {
-                // Портретная ориентация - показываем экран поворота
                 this.loading.style.display = 'none';
                 this.rotateScreen.style.display = 'flex';
                 document.body.style.background = '#000';
             }
         } else {
-            // Десктоп - сразу показываем загрузку
             this.loading.style.display = 'block';
             this.rotateScreen.style.display = 'none';
             document.body.style.background = 'linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d)';
@@ -146,7 +162,6 @@ class Game {
         const gameContainer = document.getElementById('game-container');
         if (gameContainer) {
             gameContainer.style.margin = 'auto';
-            // Принудительное центрирование
             gameContainer.style.position = 'relative';
             gameContainer.style.left = 'auto';
             gameContainer.style.right = 'auto';
@@ -163,8 +178,6 @@ class Game {
     
     checkMobileDevice() {
         if (this.isMobile) {
-            console.log("Мобильное устройство или планшет обнаружено");
-            // Скрываем обычную кнопку настроек на мобильных и планшетах
             const settingsBtn = document.getElementById('settings-btn');
             if (settingsBtn) {
                 settingsBtn.style.display = 'none';
@@ -177,23 +190,53 @@ class Game {
             this.gameActive = true;
             this.startScreen.style.display = 'none';
             
-            // Проверяем мобильное устройство
             this.checkMobileDevice();
             
             audioManager.playBackgroundMusic();
-            console.log("Игра началась! Музыка запущена.");
             
-            // Перезапускаем игрока на стартовую позицию
-            player.x = 200;
-            player.y = 500;
+            const startPos = this.currentLevel.getPlayerStart();
+            player.x = startPos.x;
+            player.y = startPos.y;
             player.velX = 0;
             player.velY = 0;
             player.onGround = false;
             player.isJumping = false;
             
-            // Очищаем эффекты
+            const settings = this.currentLevel.getSettings();
+            player.GRAVITY = settings.gravity;
+            player.JUMP_FORCE = settings.jumpForce;
+            
+            this.camera.x = player.x - this.camera.offsetX;
+            this.camera.y = player.y - this.camera.offsetY;
+            
+            this.constrainCamera();
+            
             effectsManager.clearEffects();
         }
+    }
+    
+    updateCamera() {
+        if (!this.gameActive) return;
+        
+        const targetX = player.x - this.camera.offsetX;
+        const targetY = player.y - this.camera.offsetY;
+        
+        this.camera.x += (targetX - this.camera.x) * this.camera.followSpeed;
+        this.camera.y += (targetY - this.camera.y) * this.camera.followSpeed;
+        
+        this.constrainCamera();
+    }
+    
+    constrainCamera() {
+        this.camera.x = Math.max(0, Math.min(this.camera.x, this.roomWidth - this.camera.width));
+        this.camera.y = Math.max(0, Math.min(this.camera.y, this.roomHeight - this.camera.height));
+    }
+    
+    worldToScreen(x, y) {
+        return {
+            x: x - this.camera.x,
+            y: y - this.camera.y
+        };
     }
     
     loadImages() {
@@ -203,6 +246,7 @@ class Game {
             'move2': 'images/player/move2.png',
             'run1': 'images/player/run1.png',
             'run2': 'images/player/run2.png',
+            'fall': 'images/player/fall.png',
             
             'moveef1': 'images/effects/moveef1.png',
             'moveef2': 'images/effects/moveef2.png',
@@ -220,15 +264,11 @@ class Game {
             'jumpef4': 'images/effects/jumpef4.png',
             'jumpef5': 'images/effects/jumpef5.png',
             
-            'wall': 'images/environment/wall.png',
-            'grass': 'images/environment/grass.png',
-            'platform': 'images/environment/platform.png'
+            'wall': 'images/environment/wall.png'
         };
         
         let loaded = 0;
         const total = Object.keys(imageSources).length;
-        
-        console.log("Начинаем загрузку ресурсов...");
         
         for (const [key, src] of Object.entries(imageSources)) {
             this.images[key] = new Image();
@@ -244,30 +284,24 @@ class Game {
                         loadingText.textContent = `ЗАГРУЗКА РЕСУРСОВ... ${Math.round(progress)}%`;
                     }
                 }
-                console.log(`Загружено: ${key} (${loaded}/${total})`);
                 
                 if (loaded === total) {
                     this.imagesLoaded = true;
-                    console.log("Все ресурсы загружены!");
                     setTimeout(() => {
-                        // Скрываем белый экран загрузки
                         if (this.loading) {
                             this.loading.style.display = 'none';
                         }
-                        // Показываем черный стартовый экран
                         if (this.startScreen) {
                             this.startScreen.style.display = 'flex';
                         }
                         this.gameStarted = true;
                         this.setupStartScreen();
                         this.gameLoop();
-                        console.log("Ожидаем клика для начала игры");
                     }, 500);
                 }
             };
             
             this.images[key].onerror = () => {
-                console.log(`Ошибка загрузки: ${src}, создаем замену`);
                 this.createPixelSprite(key);
                 loaded++;
                 const progress = (loaded / total) * 100;
@@ -284,18 +318,15 @@ class Game {
                 if (loaded === total) {
                     this.imagesLoaded = true;
                     setTimeout(() => {
-                        // Скрываем белый экран загрузки
                         if (this.loading) {
                             this.loading.style.display = 'none';
                         }
-                        // Показываем черный стартовый экран
                         if (this.startScreen) {
                             this.startScreen.style.display = 'flex';
                         }
                         this.gameStarted = true;
                         this.setupStartScreen();
                         this.gameLoop();
-                        console.log("Все ресурсы загружены (с запасными спрайтами)");
                     }, 500);
                 }
             };
@@ -311,7 +342,7 @@ class Game {
         const tempCtx = tempCanvas.getContext('2d');
         tempCtx.imageSmoothingEnabled = false;
         
-        if (key.includes('idle') || key.includes('move') || key.includes('run')) {
+        if (key.includes('idle') || key.includes('move') || key.includes('run') || key === 'fall') {
             tempCtx.fillStyle = '#3498db';
             tempCtx.fillRect(0, 0, 64, 64);
             
@@ -364,44 +395,27 @@ class Game {
                     }
                 }
             }
-        } else if (key === 'grass') {
-            tempCtx.fillStyle = '#27ae60';
-            tempCtx.fillRect(0, 0, 64, 10);
-            
-            tempCtx.fillStyle = '#2ecc71';
-            for (let i = 0; i < 64; i += 4) {
-                const height = 4 + Math.floor(Math.random() * 4);
-                tempCtx.fillRect(i, 10 - height, 3, height);
-            }
-        } else if (key === 'platform') {
-            tempCtx.fillStyle = '#7f8c8d';
-            tempCtx.fillRect(0, 0, 64, 20);
-            
-            tempCtx.fillStyle = '#95a5a6';
-            tempCtx.fillRect(0, 0, 64, 3);
         }
         
         this.images[key] = tempCanvas;
     }
     
     drawSun() {
-        // Рисуем ОЧЕНЬ большое солнце у самого края
         const gradient = this.ctx.createRadialGradient(
             this.light.x, this.light.y, 0,
             this.light.x, this.light.y, this.light.radius
         );
         
-        // Мягкие цвета с плавными переходами
-        gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-        gradient.addColorStop(0.05, 'rgba(255, 255, 220, 0.95)');
-        gradient.addColorStop(0.1, 'rgba(255, 255, 200, 0.9)');
-        gradient.addColorStop(0.2, 'rgba(255, 255, 180, 0.8)');
-        gradient.addColorStop(0.4, 'rgba(255, 255, 150, 0.6)');
-        gradient.addColorStop(0.7, 'rgba(255, 255, 120, 0.3)');
-        gradient.addColorStop(1, 'rgba(255, 255, 100, 0)');
+        gradient.addColorStop(0, 'rgba(255, 255, 150, 1)');
+        gradient.addColorStop(0.1, 'rgba(255, 230, 100, 0.9)');
+        gradient.addColorStop(0.3, 'rgba(255, 200, 80, 0.7)');
+        gradient.addColorStop(0.5, 'rgba(255, 180, 60, 0.5)');
+        gradient.addColorStop(0.7, 'rgba(255, 150, 40, 0.3)');
+        gradient.addColorStop(0.9, 'rgba(255, 120, 20, 0.1)');
+        gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
         
         this.ctx.save();
-        this.ctx.globalCompositeOperation = 'lighter';
+        this.ctx.globalCompositeOperation = 'screen';
         this.ctx.fillStyle = gradient;
         this.ctx.beginPath();
         this.ctx.arc(this.light.x, this.light.y, this.light.radius, 0, Math.PI * 2);
@@ -410,23 +424,19 @@ class Game {
     }
     
     drawShadows() {
-        // Рисуем только ОДНУ тень от игрока - на ближайшей платформе под ним
         this.ctx.save();
         this.ctx.globalCompositeOperation = 'multiply';
         
         let closestPlatform = null;
         let minDistance = Infinity;
         
-        // Ищем ближайшую платформу под игроком
         for (const platform of this.platforms) {
-            // Проверяем, находится ли игрок над этой платформой
             const isAbovePlatform = player.x + player.width > platform.x && 
                                   player.x < platform.x + platform.width &&
                                   player.y + player.height <= platform.y;
             
             if (isAbovePlatform) {
                 const distanceToPlatform = platform.y - (player.y + player.height);
-                // Ищем платформу с наименьшим расстоянием (самую близкую)
                 if (distanceToPlatform < minDistance) {
                     minDistance = distanceToPlatform;
                     closestPlatform = platform;
@@ -434,7 +444,6 @@ class Game {
             }
         }
         
-        // Если нашли платформу под игроком - рисуем тень на ней
         if (closestPlatform) {
             const shadowScale = Math.max(0.3, 1 - (minDistance / 200));
             const shadowAlpha = Math.max(0.1, 0.6 - (minDistance / 400));
@@ -445,19 +454,20 @@ class Game {
             const shadowX = player.x + (player.width - shadowWidth) / 2;
             const shadowY = closestPlatform.y;
             
+            const screenPos = this.worldToScreen(shadowX, shadowY);
+            
             this.ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
             
             this.ctx.beginPath();
             this.ctx.ellipse(
-                shadowX + shadowWidth / 2,
-                shadowY,
+                screenPos.x + shadowWidth / 2,
+                screenPos.y,
                 shadowWidth / 2,
                 shadowHeight / 2,
                 0, 0, Math.PI * 2
             );
             this.ctx.fill();
         } else {
-            // Если нет платформ под игроком - рисуем тень на земле
             const groundLevel = 656;
             const isAboveGround = player.y + player.height <= groundLevel;
             
@@ -472,12 +482,14 @@ class Game {
                 const shadowX = player.x + (player.width - shadowWidth) / 2;
                 const shadowY = groundLevel;
                 
+                const screenPos = this.worldToScreen(shadowX, shadowY);
+                
                 this.ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
                 
                 this.ctx.beginPath();
                 this.ctx.ellipse(
-                    shadowX + shadowWidth / 2,
-                    shadowY,
+                    screenPos.x + shadowWidth / 2,
+                    screenPos.y,
                     shadowWidth / 2,
                     shadowHeight / 2,
                     0, 0, Math.PI * 2
@@ -490,16 +502,15 @@ class Game {
     }
     
     drawLighting() {
-        // Создаем градиент для освещения от ОЧЕНЬ большого солнца
         const lightingGradient = this.ctx.createRadialGradient(
-            this.light.x, this.light.y, 100,
-            this.light.x, this.light.y, 1000
+            this.light.x, this.light.y, 50,
+            this.light.x, this.light.y, 800
         );
         
-        lightingGradient.addColorStop(0, 'rgba(255, 255, 200, 0.25)');
-        lightingGradient.addColorStop(0.3, 'rgba(255, 255, 180, 0.15)');
-        lightingGradient.addColorStop(0.6, 'rgba(255, 255, 150, 0.08)');
-        lightingGradient.addColorStop(1, 'rgba(255, 255, 120, 0)');
+        lightingGradient.addColorStop(0, 'rgba(255, 255, 150, 0.15)');
+        lightingGradient.addColorStop(0.3, 'rgba(255, 230, 100, 0.1)');
+        lightingGradient.addColorStop(0.6, 'rgba(255, 200, 80, 0.05)');
+        lightingGradient.addColorStop(1, 'rgba(255, 180, 60, 0)');
         
         this.ctx.save();
         this.ctx.globalCompositeOperation = 'overlay';
@@ -508,25 +519,16 @@ class Game {
         this.ctx.restore();
     }
     
-    drawPlatforms() {
-        for (const platform of this.platforms) {
-            if (platform.type === 'ground') {
-                this.ctx.drawImage(this.images.wall, platform.x, platform.y, 64, 64);
-                this.ctx.drawImage(this.images.grass, platform.x, platform.y - 10, 64, 10);
-                
-                const middleWidth = platform.width - 128;
-                for (let x = platform.x + 64; x < platform.x + 64 + middleWidth; x += 64) {
-                    const width = Math.min(64, platform.x + platform.width - x);
-                    this.ctx.drawImage(this.images.wall, x, platform.y, width, 64);
-                    this.ctx.drawImage(this.images.grass, x, platform.y - 10, width, 10);
-                }
-                
-                this.ctx.drawImage(this.images.wall, platform.x + platform.width - 64, platform.y, 64, 64);
-                this.ctx.drawImage(this.images.grass, platform.x + platform.width - 64, platform.y - 10, 64, 10);
-            } else {
-                this.ctx.drawImage(this.images.platform, platform.x, platform.y, platform.width, platform.height);
-            }
-        }
+    drawSky() {
+        const skyGradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+        skyGradient.addColorStop(0, '#87CEEB');
+        skyGradient.addColorStop(0.7, '#1E90FF');
+        skyGradient.addColorStop(1, '#4682B4');
+        
+        this.ctx.save();
+        this.ctx.fillStyle = skyGradient;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.restore();
     }
     
     gameLoop(timestamp = 0) {
@@ -537,32 +539,31 @@ class Game {
         
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Рисуем базовые элементы
-        this.drawPlatforms();
+        this.updateCamera();
         
-        // Рисуем тень перед игроком и эффектами
+        this.drawSky();
+        
+        this.currentLevel.drawPlatforms(this.ctx, this.camera, this.worldToScreen.bind(this), this.images);
+        
         this.drawShadows();
         
-        // Обновляем игру только если она активна
         if (this.gameActive) {
             player.update(this.platforms);
             player.updateAnimations(deltaTime);
             effectsManager.updateEffects(deltaTime, player);
         }
         
-        // Рисуем игрока и эффекты
-        player.draw(this.ctx, this.images);
-        effectsManager.drawEffects(this.ctx, this.images);
+        player.draw(this.ctx, this.images, this.camera);
+        effectsManager.drawEffects(this.ctx, this.images, this.camera);
         
-        // Рисуем освещение и солнце поверх всего
         this.drawLighting();
+        
         this.drawSun();
         
         requestAnimationFrame((time) => this.gameLoop(time));
     }
 }
 
-// Создаем глобальную переменную для доступа к состоянию игры
 let gameInstance = null;
 
 window.addEventListener('load', () => {
